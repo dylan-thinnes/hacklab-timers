@@ -21,31 +21,6 @@
       }
     },
   });
-
-  function setTimers () {
-    let src = "<table><tr><td>Timer</td><td>Last Reset</td></tr>";
-    for (name in timers) {
-      let value = timers[name];
-      if (value == null) {
-        value = "Never";
-      } else {
-        let diff = Date.now() / 1000 - value;
-
-        let seconds = diff % 60;
-        diff = (diff - seconds) / 60;
-        let minutes = diff % 60;
-        diff = (diff - minutes) / 60;
-        let hours = diff % 24;
-        diff = (diff - hours) / 24;
-        let days = diff;
-
-        value = `${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds`;
-      }
-      src += `<tr><td>${name}</td><td>${value}</td></tr>`;
-    }
-    src += "</table>";
-    document.body.innerHTML = src;
-  }
 </script>
 <style>
 * {
