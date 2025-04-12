@@ -28,7 +28,7 @@ app.get('/reset', (req, res) => {
     return;
   }
 
-  let timestamp = req.query.timestamp;
+  let timestamp = req.query.time || req.query.timestamp;
   timestamp = parseFloat(timestamp);
   if (isNaN(timestamp)) timestamp = null;
 

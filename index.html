@@ -7,6 +7,7 @@
   const app = Vue.createApp({
     data () {
       return {
+        selected: null,
         currTime: 0,
         timers: {}
       }
@@ -18,7 +19,20 @@
       },
       setCurrTime (time) {
         this.currTime = time;
-      }
+      },
+      moveSelected (delta) {
+        let keys = Object.keys(this.timers);
+        let foundIndex = keys.indexOf(this.selected);
+        if (foundIndex == -1) {
+          if (delta > 0) {
+            this.selected = keys[(keys.length + 0) % keys.length];
+          } else {
+            this.selected = keys[(keys.length + -1) % keys.length];
+          }
+        } else {
+          this.selected = keys[(keys.length + foundIndex + delta) % keys.length]
+        }
+      },
     },
   });
 </script>
@@ -30,19 +44,21 @@
 td > span {
   white-space: preserve;
 }
+
+.selected {
+  background-color: yellow;
+}
 </style>
 <body>
   <div id="app">
     <table>
       <tr>
         <td>Time Since Last</td>
-        <!--<td>ts</td>-->
         <td></td>
       </tr>
       <template :key="name" v-for="(timer, name) in timers">
-        <tr>
+        <tr :class="{ selected: name == selected }">
           <td>{{name}}</td>
-          <!--<td>{{timer}}</td>-->
           <td>
             <span>{{(Math.floor((currTime - timer) / (60 * 60 * 24))).toString().padStart(4, ' ')}}</span> days,
             <span>{{(Math.floor((currTime - timer) / (60 * 60)) % 24).toString().padStart(2, '0')}}</span> hours,
@@ -66,6 +82,23 @@ window.onload = async () => {
     let currTime = Date.now() / 1000;
     mounted.setCurrTime(currTime);
   }, 47);
+
+  document.addEventListener("keydown", async e => {
+    if (e.key == "ArrowDown") {
+      mounted.moveSelected(1);
+    } else if (e.key == "ArrowUp") {
+      mounted.moveSelected(-1);
+    } else if (e.key == " ") {
+      let name = mounted.selected;
+      let timestamp = Date.now() / 1000;
+
+      let params = new URLSearchParams({ name, timestamp });
+      let url = "/reset?" + params.toString();
+      let res = await fetch(url);
+
+      console.log(`Url: ${url}\nStatus: ${res.status}\nResponse: ${await res.text()}`);
+    }
+  })
 }
   </script>
 </body>
