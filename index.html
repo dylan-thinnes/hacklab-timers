@@ -116,9 +116,7 @@ body {
           </div>
           <div class="timer" :data-name="name" v-else>
             <span>{{(Math.floor((currTime - time) / (60 * 60 * 24))).toString().padStart(6, ' ')}}</span> days,
-            <span>{{(Math.floor((currTime - time) / (60 * 60)) % 24).toString().padStart(2, '0')}}</span> hours,
-            <span>{{(Math.floor((currTime - time) / 60) % 60).toString().padStart(2, '0')}}</span> mins,
-            <span>{{((currTime - time) % 60).toFixed(3).padStart(6, '0')}}</span> secs
+            <span>{{(Math.floor((currTime - time) / (60 * 60)) % 24).toString().padStart(2, '0')}}</span>:<span>{{(Math.floor((currTime - time) / 60) % 60).toString().padStart(2, '0')}}</span>:<span>{{((currTime - time) % 60).toFixed(3).padStart(6, '0')}}</span>
           </div>
         </template>
       </div>
