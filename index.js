@@ -8,7 +8,14 @@ const io = new socketio.Server(server);
 
 let connections = new Set();
 
-let timers = {};
+let timers = {
+  // Example timers:
+  "Death of Jesus": -62135596725,
+  "Python GIL": Date.now() / 1000,
+  "Nerd Snipe": Date.now() / 1000,
+  "Rust": Date.now() / 1000,
+  "Monad": Date.now() / 1000,
+};
 function timer(name, timestamp) {
   if (timers[name] == null || timestamp != null) {
     timers[name] = timestamp;

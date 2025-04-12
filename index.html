@@ -41,12 +41,25 @@
   font-family: monospace;
 }
 
-td > span {
+.timer > td > span {
   white-space: preserve;
 }
 
 .selected {
   background-color: yellow;
+}
+
+.timer {
+  animation: created-flash 0.3s;
+}
+
+@keyframes created-flash {
+  0% {
+    background-color: lime;
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 </style>
 <body>
@@ -56,14 +69,17 @@ td > span {
         <td>Time Since Last</td>
         <td></td>
       </tr>
-      <template :key="name" v-for="(timer, name) in timers">
-        <tr :class="{ selected: name == selected }">
-          <td>{{name}}</td>
-          <td>
-            <span>{{(Math.floor((currTime - timer) / (60 * 60 * 24))).toString().padStart(4, ' ')}}</span> days,
-            <span>{{(Math.floor((currTime - timer) / (60 * 60)) % 24).toString().padStart(2, '0')}}</span> hours,
-            <span>{{(Math.floor((currTime - timer) / 60) % 60).toString().padStart(2, '0')}}</span> minutes,
-            <span>{{((currTime - timer) % 60).toFixed(3).padStart(6, '0')}}</span> seconds
+      <template :key="name" v-for="(time, name) in timers">
+        <tr :class="{ selected: name == selected, timer: true }" :data-name="name">
+          <td style="font-weight: bold">{{name}}</td>
+          <td v-if="time == null">
+            <span>Never</span>
+          </td>
+          <td v-else>
+            <span>{{(Math.floor((currTime - time) / (60 * 60 * 24))).toString().padStart(6, ' ')}}</span> days,
+            <span>{{(Math.floor((currTime - time) / (60 * 60)) % 24).toString().padStart(2, '0')}}</span> hours,
+            <span>{{(Math.floor((currTime - time) / 60) % 60).toString().padStart(2, '0')}}</span> minutes,
+            <span>{{((currTime - time) % 60).toFixed(3).padStart(6, '0')}}</span> seconds
           </td>
         </tr>
       </template>
@@ -83,12 +99,26 @@ window.onload = async () => {
     mounted.setCurrTime(currTime);
   }, 47);
 
+  // When a timer changes, make it flash
+  Vue.watch(
+    () => mounted.timers,
+    (previous, current) => {
+      for (k in current) {
+        let el = document.querySelector(`[data-name="${k}"]`);
+        if (el == null) continue;
+        if (previous[k] == null || previous[k] == current[k]) continue;
+        const flash = [{ backgroundColor: "red" }, { backgroundColor: "transparent" }];
+        el.animate(flash, { duration: 500 });
+      }
+    }
+  )
+
   document.addEventListener("keydown", async e => {
     if (e.key == "ArrowDown") {
       mounted.moveSelected(1);
     } else if (e.key == "ArrowUp") {
       mounted.moveSelected(-1);
-    } else if (e.key == " ") {
+    } else if (e.key == "Enter" || e.key == " " || e.key == "A" || e.key == "B") {
       let name = mounted.selected;
       let timestamp = Date.now() / 1000;
 
