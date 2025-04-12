@@ -29,7 +29,7 @@ function timer(name, timestamp) {
 //timer("Death of Jesus", -62135596725);
 //timer("Nerd snipe", Date.now() / 1000);
 //timer("Python GIL complaint", Date.now() / 1000);
-//timer("Rust mention", Date.now() / 1000);
+//timer("Rewrite it in rust", Date.now() / 1000);
 //timer("A monad is just a monoid in the category of endofunctors", Date.now() / 1000);
 
 app.get('/', (req, res) => {
