@@ -59,7 +59,7 @@ body {
 }
 
 .timer {
-  animation: created-flash 0.3s;
+  animation: created-flash 1s;
 }
 
 @keyframes created-flash {
@@ -105,10 +105,10 @@ body {
       </div>
       <div class="times-column">
         <template :key="name" v-for="(time, name) in timers">
-          <div class="timer" v-if="time == null">
+          <div class="timer" :data-name="name" v-if="time == null">
             <span>Never</span>
           </div>
-          <div class="timer" v-else>
+          <div class="timer" :data-name="name" v-else>
             <span>{{(Math.floor((currTime - time) / (60 * 60 * 24))).toString().padStart(6, ' ')}}</span> days,
             <span>{{(Math.floor((currTime - time) / (60 * 60)) % 24).toString().padStart(2, '0')}}</span> hours,
             <span>{{(Math.floor((currTime - time) / 60) % 60).toString().padStart(2, '0')}}</span> minutes,
@@ -137,11 +137,11 @@ window.onload = async () => {
     () => mounted.timers,
     (previous, current) => {
       for (k in current) {
-        let el = document.querySelector(`[data-name="${k}"]`);
+        let el = document.querySelector(`.times-column .timer[data-name="${k}"]`);
         if (el == null) continue;
         if (previous[k] == null || previous[k] == current[k]) continue;
         const flash = [{ backgroundColor: "red" }, { backgroundColor: "transparent" }];
-        el.animate(flash, { duration: 500 });
+        el.animate(flash, { duration: 1000 });
       }
     }
   )
