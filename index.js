@@ -61,15 +61,15 @@ app.get('/reset', (req, res) => {
 });
 
 io.on("connection", socket => {
-  console.log(`New connection: ${socket}`);
+  console.log(`New connection`, socket);
   connections.add(socket);
   socket.emit("update", timers);
   socket.on("close", () => {
-    console.log(`Closing connection ${socket}`);
+    console.log(`Closing connection`, socket);
     connections.delete(socket);
   })
 });
 
-server.listen(3000, () => {
-  console.log('listening on *:3000');
+server.listen(3456, () => {
+  console.log('listening on *:3456');
 });
