@@ -27,10 +27,10 @@ function timer(name, timestamp) {
 
 // Example timers:
 //timer("Death of Jesus", -62135596725);
-//timer("Python GIL", Date.now() / 1000);
-//timer("Nerd Snipe", Date.now() / 1000);
-//timer("Rust", Date.now() / 1000);
-//timer("Monad", Date.now() / 1000);
+//timer("Nerd snipe", Date.now() / 1000);
+//timer("Python GIL complaint", Date.now() / 1000);
+//timer("Rust mention", Date.now() / 1000);
+//timer("A monad is just a monoid in the category of endofunctors", Date.now() / 1000);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + "/index.html");
