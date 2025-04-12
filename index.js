@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const socketio = require('socket.io');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -8,21 +9,28 @@ const io = new socketio.Server(server);
 
 let connections = new Set();
 
-let timers = {
-  // Example timers:
-  "Death of Jesus": -62135596725,
-  "Python GIL": Date.now() / 1000,
-  "Nerd Snipe": Date.now() / 1000,
-  "Rust": Date.now() / 1000,
-  "Monad": Date.now() / 1000,
-};
+let timers = JSON.parse(fs.readFileSync("timers"));
+
 function timer(name, timestamp) {
+  let changed = false;
   if (timers[name] == null || timestamp != null) {
     timers[name] = timestamp;
-    return true;
+    changed = true;
   }
-  return false;
+
+  if (changed) {
+    fs.writeFileSync("timers", JSON.stringify(timers));
+  }
+
+  return changed;
 }
+
+// Example timers:
+//timer("Death of Jesus", -62135596725);
+//timer("Python GIL", Date.now() / 1000);
+//timer("Nerd Snipe", Date.now() / 1000);
+//timer("Rust", Date.now() / 1000);
+//timer("Monad", Date.now() / 1000);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + "/index.html");
