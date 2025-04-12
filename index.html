@@ -1,11 +1,25 @@
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
   let socket = io();
   let timers = {};
 
-  socket.on("update", newTimers => {
-    timers = newTimers;
-    console.log("Updated timers: ", timers);
+  const app = Vue.createApp({
+    data () {
+      return {
+        currTime: 0,
+        timers: {}
+      }
+    },
+
+    methods: {
+      setTimers (timers) {
+        this.timers = timers;
+      },
+      setCurrTime (time) {
+        this.currTime = time;
+      }
+    },
   });
 
   function setTimers () {
@@ -31,14 +45,52 @@
     }
     src += "</table>";
     document.body.innerHTML = src;
-
-    requestAnimationFrame(setTimers);
   }
-
-  function loopFrames () {
-    console.log("Repaint.");
-    setTimers();
-    requestAnimationFrame(loopFrames);
-  }
-  requestAnimationFrame(loopFrames);
 </script>
+<style>
+* {
+  font-family: monospace;
+}
+
+td > span {
+  white-space: preserve;
+}
+</style>
+<body>
+  <div id="app">
+    <table>
+      <tr>
+        <td>Time Since Last</td>
+        <!--<td>ts</td>-->
+        <td></td>
+      </tr>
+      <template :key="name" v-for="(timer, name) in timers">
+        <tr>
+          <td>{{name}}</td>
+          <!--<td>{{timer}}</td>-->
+          <td>
+            <span>{{(Math.floor((currTime - timer) / (60 * 60 * 24))).toString().padStart(4, ' ')}}</span> days,
+            <span>{{(Math.floor((currTime - timer) / (60 * 60)) % 24).toString().padStart(2, '0')}}</span> hours,
+            <span>{{(Math.floor((currTime - timer) / 60) % 60).toString().padStart(2, '0')}}</span> minutes,
+            <span>{{((currTime - timer) % 60).toFixed(3).padStart(6, '0')}}</span> seconds
+          </td>
+        </tr>
+      </template>
+    </table>
+  </div>
+  <script>
+const mounted = app.mount('#app');
+console.log("Mounted!");
+
+socket.on("update", newTimers => {
+  mounted.setTimers(newTimers);
+});
+
+window.onload = async () => {
+  setInterval(() => {
+    let currTime = Date.now() / 1000;
+    mounted.setCurrTime(currTime);
+  }, 47);
+}
+  </script>
+</body>

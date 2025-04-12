@@ -48,6 +48,7 @@ app.get('/reset', (req, res) => {
 io.on("connection", socket => {
   console.log(`New connection: ${socket}`);
   connections.add(socket);
+  socket.emit("update", timers);
   socket.on("close", () => {
     console.log(`Closing connection ${socket}`);
     connections.delete(socket);
