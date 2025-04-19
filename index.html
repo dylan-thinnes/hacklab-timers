@@ -17,6 +17,9 @@
       setTimers (timers) {
         this.timers = timers;
       },
+      editTimers (delta) {
+        edit(this.timers, delta);
+      },
       setCurrTime (time) {
         this.currTime = time;
       },
@@ -126,11 +129,23 @@ body {
     </div>
   </div>
   <script>
+function edit(dict, delta) {
+  if (delta.type == "delete") {
+    delete dict[delta.name];
+  } else if (delta.type == "set") {
+    dict[delta.name] = delta.value;
+  }
+}
+
 const mounted = app.mount('#app');
 console.log("Mounted!");
 
 socket.on("update", newTimers => {
   mounted.setTimers(newTimers);
+});
+
+socket.on("edit", delta => {
+  mounted.editTimers(delta);
 });
 
 window.onload = async () => {

@@ -1,7 +1,7 @@
-const express = require('express');
-const http = require('http');
-const socketio = require('socket.io');
-const fs = require('fs');
+import express from 'express';
+import * as http from 'http';
+import * as socketio from 'socket.io';
+import * as fs from 'fs';
 
 const app = express();
 const server = http.createServer(app);
@@ -22,13 +22,11 @@ function resetTimer(name, rawTimestamp) {
     if (isNaN(timestamp)) return `Could not parse '${rawTimestamp}' as a float. Valid times are "now", "never", or a Unix timestamp.`
   }
 
-  timers[name] = timestamp;
-  fs.writeFileSync("timers", JSON.stringify(timers));
+  return { type: "set", "name": name, "value": timestamp };
 }
 
 function deleteTimer(name) {
-  delete timers[name];
-  fs.writeFileSync("timers", JSON.stringify(timers));
+  return { type: "delete", "name": name };
 }
 
 // Example timers:
@@ -38,9 +36,29 @@ function deleteTimer(name) {
 //timer("Rewrite it in rust", Date.now() / 1000);
 //timer("A monad is just a monoid in the category of endofunctors", Date.now() / 1000);
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + "/index.html");
-});
+function edit(dict, delta) {
+  if (delta.type == "delete") {
+    delete dict[delta.name];
+  } else if (delta.type == "set") {
+    dict[delta.name] = delta.value;
+  }
+}
+
+function applyDelta(res, delta) {
+  if (typeof delta === "string") {
+    res.send(`Error: ${errMsg}`, 400);
+  } else {
+    edit(timers, delta);
+    fs.writeFileSync("timers", JSON.stringify(timers));
+
+    for (let conn of connections) {
+      //conn.emit("update", timers);
+      conn.emit("edit", delta);
+    }
+
+    res.send(`Success.`);
+  }
+}
 
 app.get('/delete', (req, res) => {
   let name = req.query.name;
@@ -49,13 +67,7 @@ app.get('/delete', (req, res) => {
     return;
   }
 
-  deleteTimer(name);
-  res.send(`Timer with name ${name} successfully deleted.`);
-
-  for (conn of connections) {
-    console.log("Notifying timer data to", conn);
-    conn.emit("update", timers);
-  }
+  applyDelta(res, deleteTimer(name));
 });
 
 app.get('/reset', (req, res) => {
@@ -66,18 +78,7 @@ app.get('/reset', (req, res) => {
   }
 
   let rawTimestamp = req.query.time || req.query.timestamp;
-  let errMsg = resetTimer(name, rawTimestamp);
-
-  if (errMsg == null) {
-    res.send(`Timer with name ${name} successfully reset to '${rawTimestamp}'.`);
-
-    for (conn of connections) {
-      console.log("Notifying timer data to", conn);
-      conn.emit("update", timers);
-    }
-  } else {
-    res.send(`Timer with name ${name} could not be reset to '${rawTimestamp}' due to user error. Message: ${errMsg}`, 400);
-  }
+  applyDelta(res, resetTimer(name, rawTimestamp));
 });
 
 io.on("connection", socket => {
@@ -89,6 +90,8 @@ io.on("connection", socket => {
     connections.delete(socket);
   })
 });
+
+app.use(express.static("."))
 
 server.listen(3456, () => {
   console.log('listening on *:3456');
