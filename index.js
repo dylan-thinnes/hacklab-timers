@@ -11,7 +11,7 @@ let connections = new Set();
 
 let timers = JSON.parse(fs.readFileSync("timers"));
 
-function reset(name, rawTimestamp) {
+function resetTimer(name, rawTimestamp) {
   let timestamp = null;
   if (rawTimestamp == "now") {
     timestamp = Date.now() / 1000;
@@ -24,8 +24,11 @@ function reset(name, rawTimestamp) {
 
   timers[name] = timestamp;
   fs.writeFileSync("timers", JSON.stringify(timers));
+}
 
-  return null;
+function deleteTimer(name) {
+  delete timers[name];
+  fs.writeFileSync("timers", JSON.stringify(timers));
 }
 
 // Example timers:
@@ -39,6 +42,22 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
+app.get('/delete', (req, res) => {
+  let name = req.query.name;
+  if (name == null) {
+    res.send("Reset must have a name.", 500);
+    return;
+  }
+
+  deleteTimer(name);
+  res.send(`Timer with name ${name} successfully deleted.`);
+
+  for (conn of connections) {
+    console.log("Notifying timer data to", conn);
+    conn.emit("update", timers);
+  }
+});
+
 app.get('/reset', (req, res) => {
   let name = req.query.name;
   if (name == null) {
@@ -47,7 +66,7 @@ app.get('/reset', (req, res) => {
   }
 
   let rawTimestamp = req.query.time || req.query.timestamp;
-  let errMsg = reset(name, rawTimestamp);
+  let errMsg = resetTimer(name, rawTimestamp);
 
   if (errMsg == null) {
     res.send(`Timer with name ${name} successfully reset to '${rawTimestamp}'.`);
