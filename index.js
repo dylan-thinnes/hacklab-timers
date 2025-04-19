@@ -7,9 +7,23 @@ const app = express();
 const server = http.createServer(app);
 const io = new socketio.Server(server);
 
-let connections = new Set();
+const connections = new Set();
 
-let timers = JSON.parse(fs.readFileSync("timers"));
+let timersDatabase = null;
+console.log(process.argv);
+if (process.argv.length < 3) {
+  console.log("Must supply a filepath for timer database!")
+  process.exit(1);
+}
+timersDatabase = process.argv[2];
+
+let timers = null;
+try {
+  timers = JSON.parse(fs.readFileSync(timersDatabase));
+} catch (e) {
+  console.log(`Couldn't read timers from ${timersDatabase}: ${e}`)
+  timers = {};
+}
 
 function resetTimer(name, rawTimestamp) {
   let timestamp = null;
@@ -49,7 +63,7 @@ function applyDelta(res, delta) {
     res.send(`Error: ${errMsg}`, 400);
   } else {
     edit(timers, delta);
-    fs.writeFileSync("timers", JSON.stringify(timers));
+    fs.writeFileSync(timersDatabase, JSON.stringify(timers));
 
     for (let conn of connections) {
       //conn.emit("update", timers);
