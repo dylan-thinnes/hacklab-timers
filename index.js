@@ -11,18 +11,21 @@ let connections = new Set();
 
 let timers = JSON.parse(fs.readFileSync("timers"));
 
-function timer(name, timestamp) {
-  let changed = false;
-  if (timers[name] == null || timestamp != null) {
-    timers[name] = timestamp;
-    changed = true;
+function reset(name, rawTimestamp) {
+  let timestamp = null;
+  if (rawTimestamp == "now") {
+    timestamp = Date.now() / 1000;
+  } else if (rawTimestamp == "never") {
+    timestamp = null;
+  } else {
+    timestamp = parseFloat(rawTimestamp);
+    if (isNaN(timestamp)) return `Could not parse '${rawTimestamp}' as a float. Valid times are "now", "never", or a Unix timestamp.`
   }
 
-  if (changed) {
-    fs.writeFileSync("timers", JSON.stringify(timers));
-  }
+  timers[name] = timestamp;
+  fs.writeFileSync("timers", JSON.stringify(timers));
 
-  return changed;
+  return null;
 }
 
 // Example timers:
@@ -43,20 +46,18 @@ app.get('/reset', (req, res) => {
     return;
   }
 
-  let timestamp = req.query.time || req.query.timestamp;
-  timestamp = parseFloat(timestamp);
-  if (isNaN(timestamp)) timestamp = null;
+  let rawTimestamp = req.query.time || req.query.timestamp;
+  let errMsg = reset(name, rawTimestamp);
 
-  let changed = timer(name, timestamp);
-  if (changed) {
+  if (errMsg == null) {
+    res.send(`Timer with name ${name} successfully reset to '${rawTimestamp}'.`);
+
     for (conn of connections) {
       console.log("Notifying timer data to", conn);
       conn.emit("update", timers);
     }
-
-    res.send(`Timer with name ${name} successfully reset to ${timestamp}.`);
   } else {
-    res.send(`Timer with name ${name} could not be reset to ${timestamp}.`, 400);
+    res.send(`Timer with name ${name} could not be reset to '${rawTimestamp}' due to user error. Message: ${errMsg}`, 400);
   }
 });
 
