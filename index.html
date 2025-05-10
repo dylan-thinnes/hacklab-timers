@@ -190,7 +190,7 @@ window.onload = async () => {
     () => mounted.timers,
     (previous, current) => {
       for (k in current) {
-        let el = document.querySelector(`.times-column .timer[data-name="${k}"]`);
+        let el = document.querySelector(`.times-column .timer[data-name="${CSS.escape(k)}"]`);
         if (el == null) continue;
         if (previous[k] == null || previous[k] == current[k]) continue;
         const flash = [{ backgroundColor: "red" }, { backgroundColor: "transparent" }];
