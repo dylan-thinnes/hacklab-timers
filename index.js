@@ -2,6 +2,7 @@ import express from 'express';
 import * as http from 'http';
 import * as socketio from 'socket.io';
 import * as fs from 'fs';
+import * as path from 'path';
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +16,7 @@ if (process.argv.length < 3) {
   console.log("Must supply a filepath for timer database!")
   process.exit(1);
 }
-timersDatabase = process.argv[2];
+timersDatabase = path.resolve(process.argv[2]);
 
 let eventLog = null;
 console.log(process.argv);
@@ -110,6 +111,11 @@ app.get('/reset', (req, res) => {
 
   let rawTimestamp = req.query.time || req.query.timestamp;
   applyDelta(res, resetTimer(name, rawTimestamp));
+});
+
+app.get('/history', (req, res) => {
+  res.sendFile(path.resolve(eventLog));
+  res.set('Content-Type', 'text/plain');
 });
 
 io.on("connection", socket => {
