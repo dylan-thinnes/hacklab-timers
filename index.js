@@ -17,6 +17,14 @@ if (process.argv.length < 3) {
 }
 timersDatabase = process.argv[2];
 
+let eventLog = null;
+console.log(process.argv);
+if (process.argv.length < 4) {
+  console.log("Must supply a filepath for delta logs!")
+  process.exit(1);
+}
+eventLog = process.argv[3];
+
 let timers = null;
 try {
   timers = JSON.parse(fs.readFileSync(timersDatabase));
@@ -24,6 +32,14 @@ try {
   console.log(`Couldn't read timers from ${timersDatabase}: ${e}`)
   timers = {};
 }
+
+const eventLogHandle = fs.openSync(eventLog, "a");
+function logEvent(type, data) {
+  let entry = { type: type, time: Date.now(), data }
+  let raw = JSON.stringify(entry) + "\n"
+  fs.appendFile(eventLogHandle, raw, { flush: true }, () => {});
+}
+logEvent("startup", timers);
 
 function resetTimer(name, rawTimestamp) {
   let timestamp = null;
@@ -64,6 +80,7 @@ function applyDelta(res, delta) {
   } else {
     edit(timers, delta);
     fs.writeFileSync(timersDatabase, JSON.stringify(timers));
+    logEvent("delta", delta);
 
     for (let conn of connections) {
       //conn.emit("update", timers);
